@@ -1,75 +1,111 @@
 import numpy as np
 import cv2
+from lxml import etree
+from lxml.builder import E
 
-# termination criteria
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-# prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,
-objp = np.zeros((6*9,3), np.float32)
-objp[:,:2] = np.mgrid[0:9,0:6].T.reshape(-1,2)
+def px_to_mm(px):
 
-# Arrays to store object points and image points from all the images.
-objpoints = [] # 3d point in real world space
-imgpoints = [] # 2d points in image plane.
+    #Read it from file...
+    #rotationMatrix_inv = 
+    #cameraMatrix_inv = 
+    #scalar = 
+    #tvec = 
 
-# Get camera
-vid = cv2.VideoCapture(0)
+    mm = np.dot(rotationMatrix_inv,(np.dot( cameraMatrix_inv, scalar*px ) - tvec))
+    return mm.ravel()
 
-# Instructions
-print("[P] to take a pic")
-print("[Q] to exit")
+pts_row = 9
+pts_col = 6
 
-# To store the images you took, can be removed if wanted, not important
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001) # online
+objp = np.zeros((pts_row*pts_col,3), np.float32) # [ [0,0,0] [0,0,0] ... ]
+objp[:,:2] = np.mgrid[0:pts_row,0:pts_col].T.reshape(-1,2)
+objpoints = []
+imgpoints = []
 d=1
 
-# In each loop, gets a pic and store the corner points.
 while True:
-    key = input("Enter: ")
-
-    if key == "Q" or key == "q":
+    
+    if d == 26:
         break
-    
-    # Get image from camera
-    #ret, img = vid.read() #To use the camera
-    img = cv2.imread("images/file_%d.jpg"%d) # To upload images
 
-    # Convert it to grayscale
+    img = cv2.imread("picture/file_%d.jpg"%d)
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    
-    # Find the chess board corners
-    ret, corners = cv2.findChessboardCorners(gray, (9,6),None)
-    
-    # If found, add object points, image points (after refining them)
-    if ret == True:
-        
-        #save image in directory
-        print("Good Pic! #%d"%d)
-        #filename = "images/file_%d.jpg"%d
-        #cv2.imwrite(filename, img)
-        d+=1
-        
-        objpoints.append(objp)
+    ret, corners = cv2.findChessboardCorners(gray, (pts_row,pts_col)) #none is optional
 
+    if ret == True:
+        d+=1
+        objpoints.append(objp)
         corners2 = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
         imgpoints.append(corners2)
 
-        # Draw and display the corners
-        img = cv2.drawChessboardCorners(img, (9,6), corners2,ret)
+        img = cv2.drawChessboardCorners(img, (pts_row,pts_col), corners2,ret)
         cv2.imshow('img',img)
         cv2.waitKey(500)
     else:
+        d+=1
         print("Try Again")
 
-#Calibrate and store the matrix
-print("Calibrating all pictures")
-ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
-if ret == True:
-    print("Calibrated!")
-else:
-    print("error")
+retval, cameraMatrix, distCoeffs, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None, None)
+print("Error: ")
+print(retval)
+# #The reference
+# img = cv2.imread("images/file_0.jpg")
+# gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+# ret, pt = cv2.findChessboardCorners(gray, (pts_row,pts_col))
+# pts = cv2.cornerSubPix(gray,pt,(11,11),(-1,-1),criteria)
+# print(pts)
 
-print(dist)
+imagePoints = np.array([    (986.0,601.0),
+                            (1048.0,601.0),
+                            (986.0,540.0),
+                            (986.0,478.0),
+                            (1109.0,601.0)       ])
 
-print(ret)
-print(mtx)
-cv2.destroyAllWindows()
+objectPoints = np.array([   (0.0,0.0,0.0),
+                            (50.0,0.0,0.0),
+                            (0.0,50.0,0.0),
+                            (0.0,100.0,0.0),
+                            (100.0,0.0,0.0)     ])
+retval, rvec, tvec = cv2.solvePnP(objectPoints,imagePoints,cameraMatrix,distCoeffs)
+rotationMatrix,_ = cv2.Rodrigues(rvec)
+cameraMatrix_inv = np.linalg.inv(cameraMatrix) #check
+rotationMatrix_inv = np.linalg.inv(rotationMatrix)
+temp = np.array([[0],[0],[1]])
+scalar = np.dot(cameraMatrix, np.dot(rotationMatrix,temp) + tvec )
+scalar = scalar[2][0] #get 3rd value
+
+# dist_coeff_xml = E.distCoeffs(*map(E.coef, map(str, distCoeffs.ravel())))
+# camera_matrix_xml = E.cameraMatrix(*map(E.data, map(str, cameraMatrix.ravel())))
+# xmldoc = E.calibration(camera_matrix_xml, dist_coeff_xml)
+# fname = "data.xml"
+# f = open(fname, "wb")
+# f.write(etree.tostring(xmldoc, pretty_print=True))
+
+#store values:
+#calibrationmatrix
+#distributioncoefficient
+
+#translationalvector
+#scalar
+#cameramatrix_inv
+#rotationmatrix_inv
+
+#px_to_mm(point)
+
+point = np.array([[1233],[447],[1]]) #check
+print(point)
+mm4 = np.dot(rotationMatrix_inv,(np.dot( cameraMatrix_inv, scalar*point ) - tvec))
+print(mm4)
+
+#main
+    #input("calibrate camera? [y/n]: ")
+        #calibrate()
+        #set_origin()
+    #input("set origin? [y/n]: ")
+        #set_origin()
+    #input("convert? [y/n]: ")
+        #input("Enter x y coordinate: ")
+        #mm = px_to_mm()
+        #print(mm)
