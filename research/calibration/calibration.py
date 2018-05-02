@@ -7,12 +7,14 @@ import xml.etree.ElementTree as ET
 def calibration():
     pts_row = 9
     pts_col = 6
+
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
     objp = np.zeros((pts_row*pts_col,3), np.float32)
     objp[:,:2] = np.mgrid[0:pts_row,0:pts_col].T.reshape(-1,2)
     objpoints = []
     imgpoints = []
     d=1
+    cap = cv2.VideoCapture(0)
 
     #Take pics
     while True:
@@ -20,7 +22,9 @@ def calibration():
         if d == 26:
             break
 
-        img = cv2.imread("picture/file_%d.jpg"%d)
+        input("press enter")
+
+        ret,img = cap.read()
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(gray, (pts_row,pts_col)) #none is optional
 
@@ -34,13 +38,15 @@ def calibration():
             cv2.imshow('img',img)
             cv2.waitKey(500)
         else:
-            d+=1
+            #d+=1
             print("Try Again")
 
     #Calibrate
+    print("calibrating...")
     retval, cameraMatrix, distCoeffs, _, _ = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None, None)
     
     #Save file
+    print("Saving...")
     dist_coeff_xml = E.distCoeffs(*map(E.data, map(str, distCoeffs.ravel())))
     camera_matrix_xml = E.cameraMatrix(*map(E.data, map(str, cameraMatrix.ravel())))
     xmldoc = E.calibration(camera_matrix_xml, dist_coeff_xml)
@@ -50,6 +56,12 @@ def calibration():
     f.close()
 
 def set_coordinates():
+    pts_row = 9
+    pts_col = 6
+    distance = 50
+
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
     #Read data from file
     #if file not found, return false and ask to do calibration.
     tree = ET.parse("data.xml")
@@ -76,24 +88,39 @@ def set_coordinates():
     distCoeffs = np.reshape(distCoeffs, (-1, distCoeffs.size))
 
     #Take one pic, with corrdinates
-    # #The reference
-    # img = cv2.imread("images/file_0.jpg")
-    # gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    # ret, pt = cv2.findChessboardCorners(gray, (pts_row,pts_col))
-    # pts = cv2.cornerSubPix(gray,pt,(11,11),(-1,-1),criteria)
-    # print(pts)
+    #The reference
+    img = cv2.imread("picture/file_0.jpg")
+    gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    ret, pt = cv2.findChessboardCorners(gray, (pts_row,pts_col))
+    pts = cv2.cornerSubPix(gray,pt,(11,11),(-1,-1),criteria)
 
-    imagePoints = np.array([    (986.0,601.0),
-                                (1048.0,601.0),
-                                (986.0,540.0),
-                                (986.0,478.0),
-                                (1109.0,601.0)       ])
+    half_row = int((pts_row+1)/2)
+    half_col = int((pts_col+1)/2)
 
-    objectPoints = np.array([   (0.0,0.0,0.0),
-                                (50.0,0.0,0.0),
-                                (0.0,50.0,0.0),
-                                (0.0,100.0,0.0),
-                                (100.0,0.0,0.0)     ])
+    img_center = pts[ (half_col - 1)*pts_row + half_row - 1][0]
+    img_top = pts[half_row - 1][0]
+    img_bottom = pts[ (pts_col - 1)*pts_row + half_row - 1][0]
+    img_left = pts[ (half_col - 1)*pts_row][0]
+    img_right = pts[ half_col*pts_row - 1][0]
+
+    #obj
+    obj_top = -1 * distance * int((pts_col - 1)/2)
+    obj_bottom = distance * int((pts_col)/2)
+    obj_left = -1 * distance * int((pts_row - 1)/2)
+    obj_rigth = distance * int((pts_row)/2)
+
+
+    imagePoints = np.array([    (img_center[0],img_center[1]),	#center
+                                (img_top[0],img_top[1]),		#top
+                                (img_bottom[0],img_bottom[1]),	#bottom
+                                (img_left[0],img_left[1]),		#left
+                                (img_right[0],img_right[1]) ])	#right
+
+    objectPoints = np.array([   (0.0,0.0,0.0),			#center
+                                (0.0,obj_top,0.0),		#top
+                                (0.0,obj_bottom,0.0),	#bottom
+                                (obj_left,0.0,0.0),		#left
+                                (obj_rigth,0.0,0.0)	])	#right
 
     #get values for formula
     retval, rvec, tvec = cv2.solvePnP(objectPoints,imagePoints,cameraMatrix,distCoeffs)
@@ -119,7 +146,7 @@ def set_coordinates():
     return True
 
 def px_to_mm():
-    px = np.array([[1233],[447],[1]]) #check
+    px = np.array([[986],[600],[1]]) #check
 
     #Read it from file...
     tree = ET.parse("origin.xml")
@@ -167,11 +194,12 @@ def px_to_mm():
     tVec = np.swapaxes(tVec,0,1)
 
     mm = np.dot(rotationMatrixInv,(np.dot( cameraMatrixInv, scalar*px ) - tVec))
-    
+
     return mm
 
 def main():
-    calibration()
+	#row,col,
+    #calibration()
     set_coordinates()
     px_to_mm()
 

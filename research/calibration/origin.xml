@@ -1,14 +1,14 @@
 <origin>
   <rotationMatrixInv>
-    <data>0.997392748214784</data>
-    <data>2.629066286584381e-05</data>
-    <data>0.0721644311095292</data>
-    <data>-0.0001130306148794293</data>
-    <data>-0.9999981378623836</data>
-    <data>0.0019265242915169896</data>
-    <data>0.0721643473790281</data>
-    <data>-0.0019296581476394039</data>
-    <data>-0.997390887960579</data>
+    <data>0.9992008579480903</data>
+    <data>-0.0011866493748191932</data>
+    <data>0.03995293905411278</data>
+    <data>3.4691851911105066e-05</data>
+    <data>0.9995845818629171</data>
+    <data>0.02882121611612867</data>
+    <data>-0.039970542556685654</data>
+    <data>-0.028796797828898008</data>
+    <data>0.9987858129561743</data>
   </rotationMatrixInv>
   <cameraMatrixInv>
     <data>0.0007216243658299585</data>
@@ -22,11 +22,11 @@
     <data>1.0</data>
   </cameraMatrixInv>
   <tVec>
-    <data>15.530291403354417</data>
-    <data>50.59772886501341</data>
-    <data>1117.0311048229066</data>
+    <data>229.48201460223257</data>
+    <data>-50.73315616623538</data>
+    <data>2244.8394226121372</data>
   </tVec>
   <scalar>
-    <data>1116.033713934946</data>
+    <data>2245.8382084250934</data>
   </scalar>
 </origin>
