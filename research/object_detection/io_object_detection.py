@@ -121,7 +121,7 @@ def detect_object_from_images(detection_graph,category_index):
                   },
         'class': category_index[output_dict['detection_classes'][detection]]['name'],
         'id': int(output_dict['detection_classes'][detection]),
-        'score': float(output_dict['detection_scores'][detection])
+        'score': float(output_dict['detection_scores'][detection]) #here
       })
     with open('sample/output.json', 'w') as outfile: 
       json.dump(data, outfile)
