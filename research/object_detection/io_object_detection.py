@@ -11,6 +11,7 @@ from collections import defaultdict
 from io import StringIO
 from PIL import Image
 from object_detection.utils import ops as utils_ops
+from calibration import px_to_mm
 
 import cv2
 import json
@@ -110,14 +111,16 @@ def detect_object_from_images(detection_graph,category_index):
     im_height,im_width,_ = image_np.shape
     for detection in range(0,output_dict['num_detections']):
       coordinates = output_dict['detection_boxes'][detection].tolist()
-      (left, right, top, bottom) = (coordinates[1] * im_width, coordinates[3] * im_width, coordinates[2] * im_height, coordinates[0] * im_height)
+      (left, right, bottom, top) = (coordinates[1] * im_width, coordinates[3] * im_width, coordinates[2] * im_height, coordinates[0] * im_height)
+      xmin, ymax = px_to_mm(left,top)
+      xmax, ymin = px_to_mm(right,bottom)
 
       data.append({
         'bndbox': {
-                    'xmin': left,
-                    'xmax': right,
-                    'ymin': bottom,
-                    'ymax': top,
+                    'xmin': xmin,
+                    'xmax': xmax,
+                    'ymin': ymin,
+                    'ymax': ymax,
                   },
         'class': category_index[output_dict['detection_classes'][detection]]['name'],
         'id': int(output_dict['detection_classes'][detection]),
