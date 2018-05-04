@@ -4,11 +4,14 @@ from lxml import etree
 from lxml.builder import E
 import xml.etree.ElementTree as ET
 
-def calibration():
-    pts_row = 9
-    pts_col = 6
+pts_row = 24  #9   24
+pts_col = 16  #6   16
+distance = 10   #length of square (mm)
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
+
+def calibration():
+
     objp = np.zeros((pts_row*pts_col,3), np.float32)
     objp[:,:2] = np.mgrid[0:pts_row,0:pts_col].T.reshape(-1,2)
     objpoints = []
@@ -19,6 +22,7 @@ def calibration():
     #Take pics
     while True:
         
+        #FIXME: Fin a way to stop the user of taking pictures... a limit? when he is satisfied?
         if d == 26:
             break
 
@@ -56,17 +60,10 @@ def calibration():
     f.close()
 
 def set_coordinates():
-    pts_row = 9
-    pts_col = 6
-    distance = 50
-
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
     #Read data from file
-    #if file not found, return false and ask to do calibration.
     tree = ET.parse("data.xml")
     root = tree.getroot()
-
     cm = root.find("cameraMatrix")
     counter = 1
     cameraMatrix = np.empty((0,3))
@@ -80,7 +77,6 @@ def set_coordinates():
         else:
             row = np.append(row,[ float(data.text) ])
         counter+=1
-
     dc = root.find("distCoeffs")
     distCoeffs = np.empty((0,1))
     for data in dc.findall("data"):
@@ -91,10 +87,13 @@ def set_coordinates():
     #The reference
     img = cv2.imread("picture/file_0.jpg")
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    ret, pt = cv2.findChessboardCorners(gray, (pts_row,pts_col))
-    pts = cv2.cornerSubPix(gray,pt,(11,11),(-1,-1),criteria)
+    ret, pts = cv2.findChessboardCorners(gray, (pts_row,pts_col))
+    #pts = cv2.cornerSubPix(gray,pt,(11,11),(-1,-1),criteria)
+    img2 = cv2.drawChessboardCorners(img, (pts_row,pts_col), pts,ret)
+    #cv2.imshow('img',img2)
+    #cv2.waitKey(15000)
 
-    half_row = int((pts_row+1)/2)
+    half_row = int((pts_row+2)/2)
     half_col = int((pts_col+1)/2)
 
     img_center = pts[ (half_col - 1)*pts_row + half_row - 1][0]
@@ -104,10 +103,10 @@ def set_coordinates():
     img_right = pts[ half_col*pts_row - 1][0]
 
     #obj
-    obj_top = -1 * distance * int((pts_col - 1)/2)
-    obj_bottom = distance * int((pts_col)/2)
-    obj_left = -1 * distance * int((pts_row - 1)/2)
-    obj_rigth = distance * int((pts_row)/2)
+    obj_top = distance * int((pts_col - 1)/2)
+    obj_bottom = -1 * distance * int((pts_col)/2)
+    obj_left = -1 * distance * int((pts_row)/2)
+    obj_rigth = distance * int((pts_row - 1)/2)
 
 
     imagePoints = np.array([    (img_center[0],img_center[1]),	#center
@@ -121,6 +120,7 @@ def set_coordinates():
                                 (0.0,obj_bottom,0.0),	#bottom
                                 (obj_left,0.0,0.0),		#left
                                 (obj_rigth,0.0,0.0)	])	#right
+
 
     #get values for formula
     retval, rvec, tvec = cv2.solvePnP(objectPoints,imagePoints,cameraMatrix,distCoeffs)
@@ -145,9 +145,7 @@ def set_coordinates():
     f.close()
     return True
 
-def px_to_mm():
-    px = np.array([[986],[600],[1]]) #check
-
+def px_to_mm(px):
     #Read it from file...
     tree = ET.parse("origin.xml")
     root = tree.getroot()
@@ -194,14 +192,17 @@ def px_to_mm():
     tVec = np.swapaxes(tVec,0,1)
 
     mm = np.dot(rotationMatrixInv,(np.dot( cameraMatrixInv, scalar*px ) - tVec))
-
+    print(px)
+    print(mm)
     return mm
 
 def main():
 	#row,col,
     #calibration()
     set_coordinates()
-    px_to_mm()
+    px = np.array([[1370],[509],[1]]) #pixel coordinate
+
+    px_to_mm(px)
 
 
 if __name__ == "__main__":
