@@ -9,7 +9,6 @@ pts_col = 16  #6   16
 distance = 10   #length of square (mm)
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
-
 def calibration():
 
     objp = np.zeros((pts_row*pts_col,3), np.float32)
@@ -21,7 +20,7 @@ def calibration():
 
     #Take pics
     while True:
-        
+
         #FIXME: Fin a way to stop the user of taking pictures... a limit? when he is satisfied?
         if d == 26:
             break
@@ -59,7 +58,7 @@ def calibration():
     f.write(etree.tostring(xmldoc, pretty_print=True))
     f.close()
 
-def set_coordinates():
+def origin():
 
     #Read data from file
     tree = ET.parse("data.xml")
@@ -109,17 +108,17 @@ def set_coordinates():
     obj_rigth = distance * int((pts_row - 1)/2)
 
 
-    imagePoints = np.array([    (img_center[0],img_center[1]),	#center
-                                (img_top[0],img_top[1]),		#top
-                                (img_bottom[0],img_bottom[1]),	#bottom
-                                (img_left[0],img_left[1]),		#left
-                                (img_right[0],img_right[1]) ])	#right
+    imagePoints = np.array([    (img_center[0],img_center[1]),  #center
+                                (img_top[0],img_top[1]),        #top
+                                (img_bottom[0],img_bottom[1]),  #bottom
+                                (img_left[0],img_left[1]),      #left
+                                (img_right[0],img_right[1]) ])  #right
 
-    objectPoints = np.array([   (0.0,0.0,0.0),			#center
-                                (0.0,obj_top,0.0),		#top
-                                (0.0,obj_bottom,0.0),	#bottom
-                                (obj_left,0.0,0.0),		#left
-                                (obj_rigth,0.0,0.0)	])	#right
+    objectPoints = np.array([   (0.0,0.0,0.0),          #center
+                                (0.0,obj_top,0.0),      #top
+                                (0.0,obj_bottom,0.0),   #bottom
+                                (obj_left,0.0,0.0),     #left
+                                (obj_rigth,0.0,0.0) ])  #right
 
 
     #get values for formula
@@ -145,7 +144,8 @@ def set_coordinates():
     f.close()
     return True
 
-def px_to_mm(px):
+def px_to_mm(x,y):
+    px = np.array([[x],[y],[1]])
     #Read it from file...
     tree = ET.parse("origin.xml")
     root = tree.getroot()
@@ -192,18 +192,13 @@ def px_to_mm(px):
     tVec = np.swapaxes(tVec,0,1)
 
     mm = np.dot(rotationMatrixInv,(np.dot( cameraMatrixInv, scalar*px ) - tVec))
-    print(px)
-    print(mm)
-    return mm
+    return mm[0][0],mm[1][0]
 
 def main():
-	#row,col,
+    #row,col,
     #calibration()
-    set_coordinates()
-    px = np.array([[1370],[509],[1]]) #pixel coordinate
-
-    px_to_mm(px)
-
+    #origin()
+    m1,m2 = px_to_mm(1370,509)
 
 if __name__ == "__main__":
     main()
