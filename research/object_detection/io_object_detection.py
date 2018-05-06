@@ -1,3 +1,4 @@
+#export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 # Imports
 import numpy as np
 import os
@@ -156,9 +157,9 @@ def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES):
   detect_object_from_images(detection_graph,category_index)
 
 def main():
-  PATH_TO_MODEL = 'faster_rcnn_resnet101_coco_2018_01_28/frozen_inference_graph.pb'
-  PATH_TO_LABELS = 'data/mscoco_label_map.pbtxt'
-  NUM_CLASSES = 90
+  PATH_TO_MODEL = 'cups-faster-rcnn.pb'
+  PATH_TO_LABELS = 'data/cup_label_map.pbtxt'
+  NUM_CLASSES = 1
   prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES)
 
 
