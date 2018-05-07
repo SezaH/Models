@@ -1,0 +1,4 @@
+object_detection/protos/
+pycocotools/
+cocoapi/
+*.record
