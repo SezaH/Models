@@ -78,7 +78,7 @@ def run_inference_for_single_image(image, graph):
         output_dict['detection_masks'] = output_dict['detection_masks'][0]
   return output_dict
 
-def detect_object_from_images(detection_graph,category_index):
+def detect_object_from_images(detection_graph,category_index, min_score_thresh):
   print("ready to read images")
   while True:
     # the array based representation of the image will be used later in order to prepare the
@@ -105,12 +105,16 @@ def detect_object_from_images(detection_graph,category_index):
         category_index,
         instance_masks=output_dict.get('detection_masks'),
         use_normalized_coordinates=True,
-        line_thickness=8)
+        line_thickness=8,
+        min_score_thresh=min_score_thresh
+        )
 
     #Create json file
     data = []
     im_height,im_width,_ = image_np.shape
     for detection in range(0,output_dict['num_detections']):
+      if float(output_dict['detection_scores'][detection]) < min_score_thresh:
+        break
       coordinates = output_dict['detection_boxes'][detection].tolist()
       (left, right, bottom, top) = (coordinates[1] * im_width, coordinates[3] * im_width, coordinates[2] * im_height, coordinates[0] * im_height)
       xmin, ymax = px_to_mm(left,top)
@@ -123,7 +127,7 @@ def detect_object_from_images(detection_graph,category_index):
                     'ymin': ymin,
                     'ymax': ymax,
                   },
-        'class': category_index[output_dict['detection_classes'][detection]]['name'],
+        'name': category_index[output_dict['detection_classes'][detection]]['name'],
         'id': int(output_dict['detection_classes'][detection]),
         'score': float(output_dict['detection_scores'][detection]) #here
       })
@@ -137,7 +141,7 @@ def detect_object_from_images(detection_graph,category_index):
     cv2.imwrite('sample/output.jpg',image_np)
     print("done")
 
-def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES):
+def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh):
 
   # Load a (frozen) Tensorflow model into memory.
   print("loading...")
@@ -154,13 +158,14 @@ def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES):
   label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
   categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
   category_index = label_map_util.create_category_index(categories)
-  detect_object_from_images(detection_graph,category_index)
+  detect_object_from_images(detection_graph,category_index, min_score_thresh)
 
 def main():
   PATH_TO_MODEL = 'cups-faster-rcnn.pb'
   PATH_TO_LABELS = 'data/cup_label_map.pbtxt'
   NUM_CLASSES = 1
-  prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES)
+  min_score_thresh = .5
+  prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh)
 
 
 if __name__ == "__main__":
