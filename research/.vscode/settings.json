@@ -1,0 +1,12 @@
+{
+    "git.ignoreLimitWarning": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "{a,b,c,d,e,f,g,h,i,j,k,l,m,n,p,q,r,s,t,u,v,w,x,y,z}*/": true,
+        "object_detection/{_,a,b,c,d,e,f,g,h,i,j,k,l,m,n,protos,q,r,s,t,u,v,x,y,z}*/": true,
+    }
+}
