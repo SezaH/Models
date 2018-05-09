@@ -83,7 +83,7 @@ def detect_object_from_images(detection_graph,category_index, min_score_thresh):
   while True:
     # the array based representation of the image will be used later in order to prepare the
     # result image with boxes and labels on it.
-    image_np = cv2.imread("sample/input.jpg")
+    image_np = cv2.imread("io/input.jpg")
 
     if image_np is None:
       continue
@@ -131,14 +131,14 @@ def detect_object_from_images(detection_graph,category_index, min_score_thresh):
         'id': int(output_dict['detection_classes'][detection]),
         'score': float(output_dict['detection_scores'][detection]) #here
       })
-    with open('sample/output.json', 'w') as outfile: 
+    with open('io/output.json', 'w') as outfile: 
       json.dump(data, outfile)
 
     #delete input file
-    os.remove("sample/input.jpg")
+    os.remove("io/input.jpg")
 
     #create output file
-    cv2.imwrite('sample/output.jpg',image_np)
+    cv2.imwrite('io/output.jpg',image_np)
     print("done")
 
 def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh):
@@ -162,7 +162,7 @@ def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh):
 
 def main():
   PATH_TO_MODEL = 'cups-faster-rcnn.pb'
-  PATH_TO_LABELS = 'data/cup_label_map.pbtxt'
+  PATH_TO_LABELS = 'waste_busters/data/cup_label_map.pbtxt'
   NUM_CLASSES = 1
   min_score_thresh = .5
   prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh)
