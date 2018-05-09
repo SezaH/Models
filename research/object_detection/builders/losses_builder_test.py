@@ -42,7 +42,7 @@ class LocalizationLossBuilderTest(tf.test.TestCase):
     self.assertTrue(isinstance(localization_loss,
                                losses.WeightedL2LocalizationLoss))
 
-  def test_build_weighted_smooth_l1_localization_loss(self):
+  def test_build_weighted_smooth_l1_localization_loss_default_delta(self):
     losses_text_proto = """
       localization_loss {
         weighted_smooth_l1 {
@@ -58,6 +58,26 @@ class LocalizationLossBuilderTest(tf.test.TestCase):
     _, localization_loss, _, _, _ = losses_builder.build(losses_proto)
     self.assertTrue(isinstance(localization_loss,
                                losses.WeightedSmoothL1LocalizationLoss))
+    self.assertAlmostEqual(localization_loss._delta, 1.0)
+
+  def test_build_weighted_smooth_l1_localization_loss_non_default_delta(self):
+    losses_text_proto = """
+      localization_loss {
+        weighted_smooth_l1 {
+          delta: 0.1
+        }
+      }
+      classification_loss {
+        weighted_softmax {
+        }
+      }
+    """
+    losses_proto = losses_pb2.Loss()
+    text_format.Merge(losses_text_proto, losses_proto)
+    _, localization_loss, _, _, _ = losses_builder.build(losses_proto)
+    self.assertTrue(isinstance(localization_loss,
+                               losses.WeightedSmoothL1LocalizationLoss))
+    self.assertAlmostEqual(localization_loss._delta, 0.1)
 
   def test_build_weighted_iou_localization_loss(self):
     losses_text_proto = """
@@ -186,6 +206,24 @@ class ClassificationLossBuilderTest(tf.test.TestCase):
     classification_loss, _, _, _, _ = losses_builder.build(losses_proto)
     self.assertTrue(isinstance(classification_loss,
                                losses.WeightedSoftmaxClassificationLoss))
+
+  def test_build_weighted_logits_softmax_classification_loss(self):
+    losses_text_proto = """
+      classification_loss {
+        weighted_logits_softmax {
+        }
+      }
+      localization_loss {
+        weighted_l2 {
+        }
+      }
+    """
+    losses_proto = losses_pb2.Loss()
+    text_format.Merge(losses_text_proto, losses_proto)
+    classification_loss, _, _, _, _ = losses_builder.build(losses_proto)
+    self.assertTrue(
+        isinstance(classification_loss,
+                   losses.WeightedSoftmaxClassificationAgainstLogitsLoss))
 
   def test_build_weighted_softmax_classification_loss_with_logit_scale(self):
     losses_text_proto = """
@@ -421,6 +459,19 @@ class FasterRcnnClassificationLossBuilderTest(tf.test.TestCase):
         losses_proto)
     self.assertTrue(isinstance(classification_loss,
                                losses.WeightedSoftmaxClassificationLoss))
+
+  def test_build_logits_softmax_loss(self):
+    losses_text_proto = """
+      weighted_logits_softmax {
+      }
+    """
+    losses_proto = losses_pb2.ClassificationLoss()
+    text_format.Merge(losses_text_proto, losses_proto)
+    classification_loss = losses_builder.build_faster_rcnn_classification_loss(
+        losses_proto)
+    self.assertTrue(
+        isinstance(classification_loss,
+                   losses.WeightedSoftmaxClassificationAgainstLogitsLoss))
 
   def test_build_softmax_loss_by_default(self):
     losses_text_proto = """

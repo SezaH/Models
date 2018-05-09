@@ -121,6 +121,10 @@ def build_faster_rcnn_classification_loss(loss_config):
     config = loss_config.weighted_softmax
     return losses.WeightedSoftmaxClassificationLoss(
         logit_scale=config.logit_scale)
+  if loss_type == 'weighted_logits_softmax':
+    config = loss_config.weighted_logits_softmax
+    return losses.WeightedSoftmaxClassificationAgainstLogitsLoss(
+        logit_scale=config.logit_scale)
 
   # By default, Faster RCNN second stage classifier uses Softmax loss
   # with anchor-wise outputs.
@@ -150,7 +154,8 @@ def _build_localization_loss(loss_config):
     return losses.WeightedL2LocalizationLoss()
 
   if loss_type == 'weighted_smooth_l1':
-    return losses.WeightedSmoothL1LocalizationLoss()
+    return losses.WeightedSmoothL1LocalizationLoss(
+        loss_config.weighted_smooth_l1.delta)
 
   if loss_type == 'weighted_iou':
     return losses.WeightedIOULocalizationLoss()
@@ -190,6 +195,11 @@ def _build_classification_loss(loss_config):
   if loss_type == 'weighted_softmax':
     config = loss_config.weighted_softmax
     return losses.WeightedSoftmaxClassificationLoss(
+        logit_scale=config.logit_scale)
+
+  if loss_type == 'weighted_logits_softmax':
+    config = loss_config.weighted_logits_softmax
+    return losses.WeightedSoftmaxClassificationAgainstLogitsLoss(
         logit_scale=config.logit_scale)
 
   if loss_type == 'bootstrapped_sigmoid':
