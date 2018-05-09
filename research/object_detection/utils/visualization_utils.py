@@ -166,6 +166,7 @@ def draw_bounding_box_on_image(image,
   if use_normalized_coordinates:
     (left, right, top, bottom) = (xmin * im_width, xmax * im_width,
                                   ymin * im_height, ymax * im_height)
+
   else:
     (left, right, top, bottom) = (xmin, xmax, ymin, ymax)
   draw.line([(left, top), (left, bottom), (right, bottom),
@@ -624,8 +625,10 @@ def visualize_boxes_and_labels_on_image_array(
               classes[i] % len(STANDARD_COLORS)]
 
   # Draw all boxes onto image.
+  print("Capture")
   for box, color in box_to_color_map.items():
     ymin, xmin, ymax, xmax = box
+
     if instance_masks is not None:
       draw_mask_on_image_array(
           image,
