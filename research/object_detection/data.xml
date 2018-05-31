@@ -1,20 +1,20 @@
 <calibration>
   <cameraMatrix>
-    <data>1385.7625204352332</data>
+    <data>1299.548025346871</data>
     <data>0.0</data>
-    <data>966.7896395270367</data>
+    <data>951.1303757810015</data>
     <data>0.0</data>
-    <data>1374.5473063832205</data>
-    <data>538.9499512081646</data>
+    <data>1298.7216920235655</data>
+    <data>543.0202652362385</data>
     <data>0.0</data>
     <data>0.0</data>
     <data>1.0</data>
   </cameraMatrix>
   <distCoeffs>
-    <data>0.15100544615040928</data>
-    <data>-0.47947003162145674</data>
-    <data>-0.0012017411455117497</data>
-    <data>0.00014145732819621602</data>
-    <data>0.4432527717638357</data>
+    <data>-0.06838727542097109</data>
+    <data>0.08863017480342224</data>
+    <data>0.0012077015568064296</data>
+    <data>0.0031623596521472242</data>
+    <data>-0.06271357786729354</data>
   </distCoeffs>
 </calibration>

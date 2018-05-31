@@ -3,6 +3,7 @@ import cv2
 from lxml import etree
 from lxml.builder import E
 import xml.etree.ElementTree as ET
+import time
 
 pts_row = 24  #9   24
 pts_col = 16  #6   16
@@ -16,18 +17,15 @@ def calibration():
     objpoints = []
     imgpoints = []
     d=1
-    cap = cv2.VideoCapture(0)
 
     #Take pics
     while True:
 
         #FIXME: Fin a way to stop the user of taking pictures... a limit? when he is satisfied?
-        if d == 26:
+        if d == 18:
             break
 
-        input("press enter")
-
-        ret,img = cap.read()
+        img = cv2.imread("logi/img_%d.jpg"%d)
         gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         ret, corners = cv2.findChessboardCorners(gray, (pts_row,pts_col)) #none is optional
 
@@ -41,13 +39,14 @@ def calibration():
             cv2.imshow('img',img)
             cv2.waitKey(500)
         else:
-            #d+=1
+            d+=1
             print("Try Again")
 
     #Calibrate
     print("calibrating...")
     retval, cameraMatrix, distCoeffs, _, _ = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None, None)
-    
+    print(retval)
+
     #Save file
     print("Saving...")
     dist_coeff_xml = E.distCoeffs(*map(E.data, map(str, distCoeffs.ravel())))
@@ -84,13 +83,15 @@ def origin():
 
     #Take one pic, with corrdinates
     #The reference
-    img = cv2.imread("picture/file_0.jpg")
+    img = cv2.imread("io/origin.jpg")
+    cv2.imshow('img',img)
+    cv2.waitKey(5000)
+    cv2.imwrite("logi/origin.jpg",img)
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     ret, pts = cv2.findChessboardCorners(gray, (pts_row,pts_col))
-    #pts = cv2.cornerSubPix(gray,pt,(11,11),(-1,-1),criteria)
     img2 = cv2.drawChessboardCorners(img, (pts_row,pts_col), pts,ret)
-    #cv2.imshow('img',img2)
-    #cv2.waitKey(15000)
+    cv2.imshow('img',img2)
+    cv2.waitKey(5000)
 
     half_row = int((pts_row+2)/2)
     half_col = int((pts_col+1)/2)
@@ -197,8 +198,7 @@ def px_to_mm(x,y):
 def main():
     #row,col,
     #calibration()
-    #origin()
-    m1,m2 = px_to_mm(1370,509)
+    origin()
 
 if __name__ == "__main__":
     main()

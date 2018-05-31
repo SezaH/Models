@@ -7,6 +7,8 @@ import sys
 import tarfile
 import tensorflow as tf
 import zipfile
+import queue
+import threading
 
 from collections import defaultdict
 from io import StringIO
@@ -161,7 +163,7 @@ def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh):
   detect_object_from_images(detection_graph,category_index, min_score_thresh)
 
 def main():
-  PATH_TO_MODEL = 'cups-faster-rcnn.pb'
+  PATH_TO_MODEL = 'waste_busters/export/faster_rcnn_resnet101_cups_2470.pb'
   PATH_TO_LABELS = 'waste_busters/data/cup_label_map.pbtxt'
   NUM_CLASSES = 1
   min_score_thresh = .5
