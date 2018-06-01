@@ -1,4 +1,4 @@
-#export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+# export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 # Imports
 import numpy as np
 import os
@@ -7,8 +7,6 @@ import sys
 import tarfile
 import tensorflow as tf
 import zipfile
-import queue
-import threading
 
 from collections import defaultdict
 from io import StringIO
@@ -143,7 +141,7 @@ def detect_object_from_images(detection_graph,category_index, min_score_thresh):
     cv2.imwrite('io/output.jpg',image_np)
     print("done")
 
-def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh):
+def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS, min_score_thresh):
 
   # Load a (frozen) Tensorflow model into memory.
   print("loading...")
@@ -156,6 +154,11 @@ def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh):
       tf.import_graph_def(od_graph_def, name='')
 
   # Loading label map
+  with open( PATH_TO_LABELS, 'r' ) as f:
+    data_pbtxt = f.read()
+
+  NUM_CLASSES = data_pbtxt.count('item')
+
   # Label maps map indices to category names, so that when our convolution network predicts `5`, we know that this corresponds to `airplane`.  Here we use internal utility functions, but anything that returns a dictionary mapping integers to appropriate string labels would be fine
   label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
   categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
@@ -163,12 +166,14 @@ def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh):
   detect_object_from_images(detection_graph,category_index, min_score_thresh)
 
 def main():
-  PATH_TO_MODEL = 'waste_busters/export/faster_rcnn_resnet101_cups_2470.pb'
-  PATH_TO_LABELS = 'waste_busters/data/cup_label_map.pbtxt'
-  NUM_CLASSES = 1
-  min_score_thresh = .5
-  prepare_model(PATH_TO_MODEL,PATH_TO_LABELS,NUM_CLASSES, min_score_thresh)
+  PATH_TO_MODEL = 'waste_busters/export/' + sys.argv[1]
+  PATH_TO_LABELS = 'waste_busters/data/' + sys.argv[2]
 
+  min_score_thresh = float( sys.argv[3] ) / 100
+  if(min_score_thresh > 1.0 or min_score_thresh < 0.0):
+    min_score_thresh = .75
+  print(min_score_thresh)
+  prepare_model(PATH_TO_MODEL,PATH_TO_LABELS, min_score_thresh)
 
 if __name__ == "__main__":
     main()
