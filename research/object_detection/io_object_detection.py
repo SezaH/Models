@@ -166,8 +166,8 @@ def prepare_model(PATH_TO_MODEL,PATH_TO_LABELS, min_score_thresh):
   detect_object_from_images(detection_graph,category_index, min_score_thresh)
 
 def main():
-  PATH_TO_MODEL = 'waste_busters/export/' + sys.argv[1]
-  PATH_TO_LABELS = 'waste_busters/data/' + sys.argv[2]
+  PATH_TO_MODEL = sys.argv[1]
+  PATH_TO_LABELS = sys.argv[2]
 
   min_score_thresh = float( sys.argv[3] ) / 100
   if(min_score_thresh > 1.0 or min_score_thresh < 0.0):
