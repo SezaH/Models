@@ -1,0 +1,1 @@
+google-chrome http://localhost:6006/ && tensorboard --logdir="./object_detection/waste_busters/train/"
