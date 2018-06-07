@@ -12,10 +12,10 @@ from collections import defaultdict
 from io import StringIO
 from PIL import Image
 from object_detection.utils import ops as utils_ops
-from calibration import px_to_mm
 
 import cv2
 import json
+import xml.etree.ElementTree as ET
 
 if tf.__version__ < '1.4.0':
   raise ImportError('Please upgrade your tensorflow installation to v1.4.* or later!')
@@ -25,6 +25,57 @@ if tf.__version__ < '1.4.0':
 
 from utils import label_map_util
 from utils import visualization_utils as vis_util
+
+#Read it from file...
+tree = ET.parse("origin.xml")
+root = tree.getroot()
+
+rm = root.find("rotationMatrixInv")
+counter = 1
+rotationMatrixInv = np.empty((0,3))
+row = np.empty((0,3))
+for data in rm.findall("data"):
+    if (counter % 3) == 0:
+        row = np.append(row,[float(data.text) ])
+        row = np.reshape(row, (-1, 3))
+        rotationMatrixInv = np.append( rotationMatrixInv, row, axis = 0 )
+        row = np.empty((0,3))
+    else:
+        row = np.append(row,[ float(data.text) ])
+    counter+=1
+
+# cameraMatrix_inv = 
+cmi = root.find("cameraMatrixInv")
+counter = 1
+cameraMatrixInv = np.empty((0,3))
+row = np.empty((0,3))
+for data in cmi.findall("data"):
+    if (counter % 3) == 0:
+        row = np.append(row,[float(data.text) ])
+        row = np.reshape(row, (-1, 3))
+        cameraMatrixInv = np.append( cameraMatrixInv, row, axis = 0 )
+        row = np.empty((0,3))
+    else:
+        row = np.append(row,[ float(data.text) ])
+    counter+=1
+
+# scalar
+sc = root.find("scalar")
+scalar = float(sc.find("data").text )
+
+# tvec
+tv = root.find("tVec")
+tVec = np.empty((0,1))
+for data in tv.findall("data"):
+        tVec = np.append(tVec,[ float(data.text) ] )
+tVec = np.reshape(tVec, (-1, tVec.size))
+tVec = np.swapaxes(tVec,0,1)
+
+def px_to_mm(x,y):
+  print("here")
+  px = np.array([[x],[y],[1]])
+  mm = np.dot(rotationMatrixInv,(np.dot( cameraMatrixInv, scalar*px ) - tVec))
+  return mm[0][0],mm[1][0]
 
 def load_image_into_numpy_array(image):
   (im_width, im_height) = image.size
